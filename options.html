@@ -5,8 +5,14 @@
     <meta charset="utf-8">
 
     <style>
+        @media (prefers-color-scheme: dark) {
+          body {
+            background-color: #23222b;
+            color: #ffffff;
+          }
+        }
         input:invalid {
-          box-shadow: 0 0 5px 1px red;
+          outline: 1px solid red;
         }
     </style>
   </head>
@@ -24,7 +30,7 @@
             <label>Miniflux URL </label> 
         </td>
         <td>
-          <input type="url" id="url" required pattern="^https?://\w.*">
+          <input placeholder="https://rssdomain.com" type="url" id="url" required pattern="^https?://\w.*">
         </td>
       </tr>
 
@@ -109,6 +115,42 @@
         </td>
         <td>
           <input type="number" min="0" id="lastEntry" readonly>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+            <label>Icon Color</label>
+        </td>
+        <td>
+          <input type="color" name="Icon Color" id="iconColor" value="#999999">
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+            <label>Notification Badge Background Color</label>
+        </td>
+        <td>
+          <input type="color" name="Notification Badge Background Color" id="badgeBackgroundColor" value="#294e5f">
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+            <label>Notification Badge Background Color (Bad Request)</label>
+        </td>
+        <td>
+          <input type="color" name="Notification Badge Background Color (Bad Request)" id="badgeBadRequestBackgroundColor" value="#ff0000">
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+            <label>Notification Text Color</label>
+        </td>
+        <td>
+          <input type="color" name="Notification Text Color" id="badgeTextColor" value="#ffffff">
         </td>
       </tr>
 
