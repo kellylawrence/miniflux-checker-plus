@@ -1,3 +1,25 @@
+# Miniflux Checker Plus
+A slightly modified version of the original extension by [Will Shanks](https://github.com/willsALMANJ/miniflux-checker), with some adjustments and minor customization options.
+
+These include:
+
++ A Miniflux themed icon in place of the original generic RSS feed icon
++ Clicking the extension icon in the toolbar will now open a new tab to your Miniflux instance. You can right click the icon to display a context menu, where you can refresh the feed manually
++ Color customization options including:
+  + Icon Color
+    + _The color of the extensions icon in the Toolbar_
+  + Notification Badge Background Color
+    + _The background color of the notification badge that appears when there are unread feed entries_
+  + Notification Badge Background Color (Bad Request)
+    + _The background color of the notification badge that appears when there is a bad request/server connection issue_
+  + Notification Text Color
+    + _The color of the text that appears in the notification badge_
+
+-----
+
+<details>
+<summary>Original Extension Description</summary>
+
 Miniflux Checker
 ================
 Miniflux Checker is a Firefox WebExtension that tracks unread items in a [Miniflux RSS reader](https://miniflux.app) account. Specifically, it does the following:
@@ -41,3 +63,5 @@ References
 * Miniflux Notifications ([Google Play](https://chrome.google.com/webstore/detail/miniflux-notifications/jpeplhckmjlpahnkpblakfligkbfefkg), [GitHub](https://github.com/modInfo/miniflux-chrome-notifier))
   - This project was only discovered after Minflux Checker was written. Otherwise, that project would have been ported to Firefox rather than creating a separate project. The Firefox Add-ons site was searched before writing Miniflux Checker but not the Chrome store. The feature request for in-client notifications was also monitored but nothing was posted there.
 * Miniflux Checker (this project) ([Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/miniflux-checker/), [GitHub](https://github.com/willsALMANJ/miniflux-checker))
+
+</details>
