@@ -261,24 +261,25 @@ async function setupAlarm() {
 }
 
 async function onContextAction(actionInfo) {
-    if (actionInfo.menuItemId === 'miniflux-show-unread') {
-        var settings = await browser.storage.local.get(['url'])
-        if (!settings.url) {
-            return
-        }
-        browser.tabs.create({url: `${settings.url}/unread`})
+    if (actionInfo.menuItemId === 'miniflux-check-feeds') {
+        checkFeeds()
     }
 }
 
 setDefaults()
-browser.browserAction.setBadgeBackgroundColor({'color': 'blue'})
-browser.browserAction.onClicked.addListener(checkFeeds)
+browser.browserAction.onClicked.addListener(async () => {
+    var info = await browser.storage.local.get(['url'])
+    browser.tabs.create({
+        "url": info.url
+    });
+});
+
 setupAlarm()
 browser.alarms.onAlarm.addListener(handleAlarm)
 
 browser.contextMenus.create({
-    id: 'miniflux-show-unread',
-    title: 'Show unread',
+    id: 'miniflux-check-feeds',
+    title: 'Check Feeds',
     contexts: ['browser_action']
 })
 browser.contextMenus.onClicked.addListener(info => onContextAction(info))
