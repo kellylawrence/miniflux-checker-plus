@@ -7,12 +7,54 @@ var defaults = {
     'url': '',
     'username': '',
     'useIcons': true,
-    'token': ''
+    'token': '',
+    'iconColor': '#999999',
+    'badgeBackgroundColor': '#294e5f',
+    'badgeBadRequestBackgroundColor': '#ff0000',
+    'badgeTextColor': '#ffffff'
 }
 
 async function setDefaults() {
     var settingsNames = Object.getOwnPropertyNames(defaults)
     var settings = await browser.storage.local.get(settingsNames)
+    var info = await browser.storage.local.get([
+        'iconColor', 'badgeBackgroundColor', 'badgeBadRequestBackgroundColor', 'badgeTextColor'])
+    const iconColor = info.iconColor || defaults.iconColor;
+    const badgeBackgroundColor = info.badgeBackgroundColor || defaults.badgeBackgroundColor;
+    const badgeTextColor = info.badgeTextColor || defaults.badgeTextColor;
+
+    const svgTemplate = `
+    <svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 430" width="430" height="430">
+	<style>
+		.s0 { fill: ${iconColor} }
+	</style>
+	<path class="s0" d="m139.2 81q5.3-2.8 10.8-4.8 5.5-2.1 11.3-3.5 5.7-1.4 11.6-2.1 5.9-0.7 11.8-0.6 50.4 0 64.2 43.8 3.9-4.7 8.3-9 4.4-4.3 9.1-8.2 4.7-3.9 9.8-7.4 5-3.5 10.3-6.5 22.2-12.7 49.4-12.7 37.8 0 54 23.1 16.2 23.1 16.2 69.3v174q0 6.5 1.8 8.9c1.2 1.5 3.9 3 8 4.1l14.2 4.7v10.7h-84.5q-11 0-15.8-8.3-4.8-8.3-4.9-24.9v-179.9q0-26.6-5.9-37.8-5.9-11.3-19.7-11.3-21.9 0-46.7 26 0.7 4.2 1.2 8.4 0.4 4.2 0.8 8.4 0.3 4.3 0.4 8.5 0.1 4.2 0.1 8.5v174q0 6.5 1.8 8.9c1.2 1.5 3.9 3 8 4.1l14.2 4.7v10.7h-84.5q-11 0-15.9-8.3-4.8-8.3-4.8-24.9v-179.9q0-26.6-5.9-37.8-5.9-11.3-19.7-11.3-21.6 0-44.3 23.7v210.1q0 6.5 1.8 9.2 1.9 2.6 7.6 4.4l13.8 4.1v10.7h-128.4v-10.7l14.2-4.7q6.1-1.8 8-4.1 1.8-2.4 1.8-8.9v-223.7q0-6.5-1.8-8.9-1.9-2.4-8-4.2l-14.2-4.7v-10.6l97.5-17.8h6.9v41.4q3.9-4 8.2-7.8 4.3-3.7 8.8-7.1 4.5-3.4 9.3-6.4 4.8-3 9.8-5.6z"/>
+</svg>`;
+
+    // Turn into a Blob
+    const blob = new Blob([svgTemplate], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+
+    // Draw into a canvas to get ImageData
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 32;
+    canvas.height = 32;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, 32, 32);
+    const imageData = ctx.getImageData(0, 0, 32, 32);
+
+    // Apply as action icon
+    browser.browserAction.setIcon({ imageData });
+    browser.browserAction.setBadgeBackgroundColor({
+        color: badgeBackgroundColor
+    })
+    browser.browserAction.setBadgeTextColor({
+        color: badgeTextColor
+    })
 
     var val
     for (let setting in defaults) {
@@ -41,7 +83,8 @@ function sanitizeInterval(settings) {
 async function checkFeeds() {
     var info = await browser.storage.local.get([
         'url', 'username', 'password', 'lastEntry', 'notifications',
-        'maxNotifications', 'useIcons', 'token'])
+        'maxNotifications', 'useIcons', 'token', 'badgeBadRequestBackgroundColor'])
+    const badgeBadRequestBackgroundColor = info.badgeBadRequestBackgroundColor || defaults.badgeBadRequestBackgroundColor;
 
     var url = info.url + '/v1/entries?status=unread&direction=desc'
 
@@ -62,14 +105,16 @@ async function checkFeeds() {
     }
     if (bad_request || !response.ok) {
         browser.browserAction.setBadgeText({'text': 'X'})
-        browser.browserAction.setBadgeBackgroundColor({color: 'red'})
+        browser.browserAction.setBadgeBackgroundColor({color: `${badgeBadRequestBackgroundColor}`})
         browser.browserAction.setTitle({title: 'Miniflux Checker [Error connecting to Miniflux]'})
         return
     }
     var body = await response.json()
 
-    browser.browserAction.setBadgeText({'text': `${body.total}`})
-    browser.browserAction.setBadgeBackgroundColor({color: 'blue'})
+    browser.browserAction.setBadgeText({
+        text: body.total > 0 ? `${body.total}` : ''
+    });
+
     browser.browserAction.setTitle({title: 'Miniflux Checker'})
 
     var previousLastEntry = info.lastEntry
@@ -216,24 +261,25 @@ async function setupAlarm() {
 }
 
 async function onContextAction(actionInfo) {
-    if (actionInfo.menuItemId === 'miniflux-show-unread') {
-        var settings = await browser.storage.local.get(['url'])
-        if (!settings.url) {
-            return
-        }
-        browser.tabs.create({url: `${settings.url}/unread`})
+    if (actionInfo.menuItemId === 'miniflux-check-feeds') {
+        checkFeeds()
     }
 }
 
 setDefaults()
-browser.browserAction.setBadgeBackgroundColor({'color': 'blue'})
-browser.browserAction.onClicked.addListener(checkFeeds)
+browser.browserAction.onClicked.addListener(async () => {
+    var info = await browser.storage.local.get(['url'])
+    browser.tabs.create({
+        "url": info.url
+    });
+});
+
 setupAlarm()
 browser.alarms.onAlarm.addListener(handleAlarm)
 
 browser.contextMenus.create({
-    id: 'miniflux-show-unread',
-    title: 'Show unread',
+    id: 'miniflux-check-feeds',
+    title: 'Check Feeds',
     contexts: ['browser_action']
 })
 browser.contextMenus.onClicked.addListener(info => onContextAction(info))
